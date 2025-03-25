@@ -46,9 +46,8 @@ class RidesScreen extends StatelessWidget {
     );
 
     if (newPreference != null) {
-      // 1 - Update the current preference
       // ignore: use_build_context_synchronously
-      context.read<RidePrefProivder>().setCurrentPreference(newPreference);
+      onRidePrefSelected(context, newPreference);
     }
   }
 

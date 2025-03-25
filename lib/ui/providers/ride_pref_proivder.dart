@@ -2,17 +2,36 @@
 import 'package:flutter/material.dart';
 import 'package:week_3_blabla_project/model/ride/ride_pref.dart';
 import 'package:week_3_blabla_project/repository/ride_preferences_repository.dart';
+import 'package:week_3_blabla_project/ui/providers/async_value.dart';
 
 class RidePrefProivder extends ChangeNotifier{
 
   RidePreference? _currentPreference;
-  List<RidePreference> _pastPreferences = [];
+  late AsyncValue<List<RidePreference>> _pastPreferences;
 
   // Constructor
   final RidePreferencesRepository ridePreferencesRepository;
 
+  Future<void> _fetchPastPreferences() async {
+    // Loading
+    _pastPreferences = AsyncValue.loading();
+    notifyListeners();
+    
+    try {
+      // Fetch the past preferences
+      List<RidePreference> pastPrefs = await ridePreferencesRepository.getPastPreferences();
+      // Success
+      _pastPreferences = AsyncValue.success(pastPrefs);
+    } catch (e) {
+      // Error
+      _pastPreferences = AsyncValue.error(e);
+    }
+
+    notifyListeners();
+  }
+
   RidePrefProivder({required this.ridePreferencesRepository}) {
-    _pastPreferences = ridePreferencesRepository.getPastPreferences();
+    _fetchPastPreferences();
   }
 
   // get current preference
@@ -31,16 +50,30 @@ class RidePrefProivder extends ChangeNotifier{
     }
   }
 
-  void _addPreference(RidePreference ridePreference) {
-    if(_pastPreferences.contains(ridePreference)) {
+  void _addPreference(RidePreference ridePreference) async{
+    // Check if the preference already exists in the list
+    if (_pastPreferences.data != null &&
+        _pastPreferences.data!.contains(ridePreference)) {
       return;
-    } else {
-      _pastPreferences.add(ridePreference);
-      notifyListeners();
     }
+
+    // Call the repository to add the preference
+    await ridePreferencesRepository.addPreference(ridePreference);
+
+    // Fetch the updated list of past preferences after adding
+    _fetchPastPreferences(); 
   }
 
   // Get the list of past preference newest to oldest
-  List<RidePreference> get pastPreferences => _pastPreferences.reversed.toList();
+  List<RidePreference> get pastPreferences {
+    if (_pastPreferences.data != null) {
+      return _pastPreferences.data!.reversed.toList();
+    } else {
+      return [];
+    }
+  }
+
+  // Public getter for the pastPreferences state
+  AsyncValue<List<RidePreference>> get pastPreferencesState => _pastPreferences;
 
 }
