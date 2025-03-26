@@ -68,7 +68,7 @@ class RidesScreen extends StatelessWidget {
         child: Consumer<RidePrefProivder> (
           builder: (context, ridePrefProvider, child) {
 
-            RidePreference currentPreference = ridePrefProvider.pastPreferences[0];
+            RidePreference currentPreference = ridePrefProvider.currentPreference!;
 
             List<Ride> matchingRides = RidesService.instance.getRidesFor(
               currentPreference,
